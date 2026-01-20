@@ -1,0 +1,10 @@
+# Core dependencies for reading Office files
+pandas>=1.5.0
+openpyxl>=3.0.0
+
+# For detecting AIP/DRM protection
+olefile>=0.46
+
+# For reading protected files on Windows (COM automation)
+# Note: Windows only - install manually on Windows systems
+# pywin32>=304
