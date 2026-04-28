@@ -1,0 +1,21 @@
+{
+  "name": "ms-office-expert",
+  "version": "0.1.0",
+  "description": "Read, write, and detect protection on Microsoft Office files (.xlsx/.docx/.pptx and legacy formats), including Azure Information Protection encrypted documents",
+  "author": {
+    "name": "chkp-roniz"
+  },
+  "homepage": "https://github.com/chkp-roniz/skills/tree/main/plugins/ms-office-expert",
+  "repository": "https://github.com/chkp-roniz/skills",
+  "license": "MIT",
+  "keywords": [
+    "office",
+    "excel",
+    "word",
+    "powerpoint",
+    "aip",
+    "sensitivity-labels",
+    "drm"
+  ],
+  "skills": "./.apm/skills/"
+}

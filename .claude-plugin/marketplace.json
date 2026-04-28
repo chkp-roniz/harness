@@ -1,0 +1,16 @@
+{
+  "name": "chkp-roniz-skills",
+  "owner": {
+    "name": "chkp-roniz",
+    "url": "https://github.com/chkp-roniz"
+  },
+  "description": "Ron's collection of Claude Code plugins (also installable as microsoft/apm packages)",
+  "plugins": [
+    {
+      "name": "ms-office-expert",
+      "source": "./plugins/ms-office-expert",
+      "description": "Tools for working with Microsoft Office files, including AIP/sensitivity-label-protected documents",
+      "version": "0.1.0"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+name: ms-office-expert
+version: 0.1.0
+description: Read, write, and detect protection on Microsoft Office files including AIP-encrypted documents
+author: chkp-roniz
+license: MIT
+type: skill
+target: all
+includes: auto
+dependencies:
+  apm: []
+  mcp: []
