@@ -1,42 +1,106 @@
-# Skills Repository
+# Skills Marketplace
 
-This repository contains my personal collection of skills - specialized knowledge modules that provide domain-specific guidance and instructions for various technical tasks.
+This repository is a dual-format distribution:
 
-## What are Skills?
+- a **Claude Code plugin marketplace**, defined by [`.claude-plugin/marketplace.json`](./.claude-plugin/marketplace.json)
+- a **microsoft/apm** package collection, with each plugin carrying its own `apm.yml`
 
-Skills are structured knowledge files that contain detailed instructions, code examples, and best practices for specific technical domains. They serve as reference guides that can be used to quickly understand and implement solutions for common challenges.
+Each plugin lives under `plugins/<name>/` with its skill content under `.apm/skills/<skill-name>/SKILL.md` (the APM convention). The Claude plugin manifest in `plugins/<name>/.claude-plugin/plugin.json` sets `"skills": "./.apm/skills/"` so both runtimes load the same files — one source of truth, two manifests.
 
-## Repository Structure
+## Available plugins
+
+### `ms-office-expert`
+
+Tools for reading, writing, and detecting protection on Microsoft Office files (`.xlsx`, `.docx`, `.pptx` and legacy `.xls`/`.doc`/`.ppt`), including Azure Information Protection (AIP) encrypted documents.
+
+**Skills**
+
+- `office-sensitivity-labels` — detect and read AIP-protected Office files. See [the skill](./plugins/ms-office-expert/.apm/skills/office-sensitivity-labels/SKILL.md).
+
+See [`plugins/ms-office-expert/README.md`](./plugins/ms-office-expert/README.md) for full install and usage details.
+
+## Install
+
+### Claude Code
 
 ```
-.github/
-└── skills/
-    └── <skill-name>/
-        └── SKILL.md
+/plugin marketplace add chkp-roniz/skills
+/plugin install ms-office-expert@chkp-roniz-skills
 ```
 
-Each skill is stored in its own directory under `.github/skills/` with a `SKILL.md` file containing the full documentation.
+### microsoft/apm
 
-## Available Skills
+This repo hosts APM packages as subdirectories under `plugins/`. APM supports installing a package from a subdirectory using its GitHub shorthand: `<owner>/<repo>/<subpath>`.
 
-### Office Sensitivity Labels
+**Imperative install (one-shot):**
 
-**Location:** `.github/skills/office-sensitivity-labels/`
+```
+apm install chkp-roniz/skills/plugins/ms-office-expert
+```
 
-Guidelines for handling Microsoft Office files (Excel, Word, PowerPoint) that may be protected with Azure Information Protection (AIP) encryption. This skill covers:
+If you don't already have an `apm.yml` in the current project, APM will auto-create a minimal one and add the package to it. To target Claude Code specifically (instead of auto-detecting):
 
-- Detecting if files are protected/encrypted
-- Reading protected files programmatically using COM automation (Windows)
-- Cross-platform solutions using MIP SDK
-- Ready-to-use Python scripts for common operations
-- Troubleshooting common issues with protected files
+```
+apm install chkp-roniz/skills/plugins/ms-office-expert --target claude
+```
 
-**Supported file types:** `.xlsx`, `.xls`, `.xlsm`, `.docx`, `.doc`, `.docm`, `.pptx`, `.ppt`, `.pptm`
+**Declarative install (recommended for projects):**
 
-## Adding New Skills
+Add the package to your project's `apm.yml`, then run `apm install`:
 
-To add a new skill:
+```yaml
+# apm.yml
+name: my-project
+version: 1.0.0
+dependencies:
+  apm:
+    - chkp-roniz/skills/plugins/ms-office-expert
+```
 
-1. Create a new directory under `.github/skills/` with the skill name
-2. Add a `SKILL.md` file with the skill documentation
-3. Include a YAML frontmatter with `name` and `description` fields
+```
+apm install
+```
+
+**User-scope install (available across all projects):**
+
+```
+apm install -g chkp-roniz/skills/plugins/ms-office-expert
+```
+
+This deploys the skill into `~/.claude/skills/` (and the equivalents for other detected runtimes), so it's available to any project on the machine.
+
+See the [APM CLI reference](https://github.com/microsoft/apm/blob/main/docs/src/content/docs/reference/cli-commands.md) for the full set of `apm install` options.
+
+## Repository layout
+
+```
+.
+├── .claude-plugin/
+│   └── marketplace.json              # Claude marketplace manifest
+├── plugins/
+│   └── ms-office-expert/             # Claude plugin = APM package
+│       ├── .claude-plugin/
+│       │   └── plugin.json           # Claude plugin manifest
+│       ├── apm.yml                   # APM package manifest
+│       ├── README.md
+│       └── .apm/
+│           └── skills/
+│               └── office-sensitivity-labels/
+│                   ├── SKILL.md
+│                   ├── README.md
+│                   └── *.py
+├── .gitignore
+├── LICENSE
+└── README.md
+```
+
+## Adding a new plugin
+
+1. Create a new directory under `plugins/<plugin-name>/`.
+2. Add `apm.yml` (APM manifest) and `.claude-plugin/plugin.json` (Claude plugin manifest, with `"skills": "./.apm/skills/"`).
+3. Add skills under `.apm/skills/<skill-name>/SKILL.md`. The frontmatter only needs `name` and `description` — both runtimes accept that minimum.
+4. Register the plugin in [`.claude-plugin/marketplace.json`](./.claude-plugin/marketplace.json).
+
+## License
+
+MIT — see [LICENSE](./LICENSE).
