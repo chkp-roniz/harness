@@ -1,0 +1,5 @@
+name: skill-curator
+version: 0.1.0
+description: Post-session skill curation for Claude Code, adapted from the SkillOS paper (arxiv 2605.06614). Reviews queued sessions, proposes insert/update/delete operations on the user's personal skill library, applies the SkillOS rubric (validity, quality, compactness), advisory mode only.
+
+includes: auto

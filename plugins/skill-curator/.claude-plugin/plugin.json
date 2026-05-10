@@ -1,0 +1,13 @@
+{
+  "name": "skill-curator",
+  "version": "0.1.0",
+  "description": "Post-session skill curation for Claude Code. Reviews past sessions and proposes insert/update/delete operations on your personal skill library, in advisory mode.",
+  "author": {
+    "name": "Ron Izraeli",
+    "url": "https://github.com/chkp-roniz"
+  },
+  "homepage": "https://github.com/chkp-roniz/skills/tree/main/plugins/skill-curator",
+  "license": "MIT",
+  "keywords": ["skills", "curation", "self-evolving", "skillos", "memory", "agent"],
+  "skills": "./.apm/skills/"
+}

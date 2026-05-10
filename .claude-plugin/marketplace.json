@@ -11,6 +11,12 @@
       "source": "./plugins/ms-office-expert",
       "description": "Tools for working with Microsoft Office files, including AIP/sensitivity-label-protected documents",
       "version": "0.1.0"
+    },
+    {
+      "name": "skill-curator",
+      "source": "./plugins/skill-curator",
+      "description": "Post-session skill curation. Reviews past Claude Code sessions and proposes insert/update/delete operations on your personal skill library, in advisory mode. Adapted from the SkillOS paper (arxiv 2605.06614).",
+      "version": "0.1.0"
     }
   ]
 }
