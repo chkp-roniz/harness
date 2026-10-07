@@ -15,7 +15,7 @@ Tools for reading, writing, and detecting protection on Microsoft Office files (
 
 **Skills**
 
-- `office-sensitivity-labels` — detect and read AIP-protected Office files. See [the skill](./plugins/ms-office-expert/.apm/skills/office-sensitivity-labels/SKILL.md).
+- `office-sensitivity-labels` — detect and read AIP-protected Office files. See [the skill](./plugins/ms-office-expert/.apm/harness/office-sensitivity-labels/SKILL.md).
 
 See [`plugins/ms-office-expert/README.md`](./plugins/ms-office-expert/README.md) for full install and usage details.
 
@@ -41,7 +41,7 @@ apm install chkp-roniz/skills/plugins/ms-office-expert
 If you don't already have an `apm.yml` in the current project, APM will auto-create a minimal one and add the package to it. To target Claude Code specifically (instead of auto-detecting):
 
 ```
-apm install chkp-roniz/skills/plugins/ms-office-expert --target claude
+apm install chkp-roniz/harness/plugins/ms-office-expert --target claude
 ```
 
 **Declarative install (recommended for projects):**
@@ -54,7 +54,7 @@ name: my-project
 version: 1.0.0
 dependencies:
   apm:
-    - chkp-roniz/skills/plugins/ms-office-expert
+    - chkp-roniz/harness/plugins/ms-office-expert
 ```
 
 ```
@@ -64,7 +64,7 @@ apm install
 **User-scope install (available across all projects):**
 
 ```
-apm install -g chkp-roniz/skills/plugins/ms-office-expert
+apm install -g chkp-roniz/harness/plugins/ms-office-expert
 ```
 
 This deploys the skill into `~/.claude/skills/` (and the equivalents for other detected runtimes), so it's available to any project on the machine.
