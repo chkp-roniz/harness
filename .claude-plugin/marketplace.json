@@ -1,5 +1,5 @@
 {
-  "name": "chkp-roniz-skills",
+  "name": "chkp-roniz-plugins",
   "owner": {
     "name": "chkp-roniz",
     "url": "https://github.com/chkp-roniz"
@@ -11,6 +11,12 @@
       "source": "./plugins/ms-office-expert",
       "description": "Tools for working with Microsoft Office files, including AIP/sensitivity-label-protected documents",
       "version": "0.1.0"
+    },
+    {
+      "name": "seamless-compaction",
+      "source": "./plugins/seamless-compaction",
+      "description": "Cleans old tool results out of the context when the engine compacts, with no model call",
+      "version": "0.1.3"
     }
   ]
 }

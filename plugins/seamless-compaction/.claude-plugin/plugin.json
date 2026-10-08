@@ -1,0 +1,38 @@
+{
+  "name": "seamless-compaction",
+  "version": "0.1.3",
+  "description": "Cleans old tool results out of the context when the engine compacts, with no model call and no wait. Logs every operation.",
+  "author": {
+    "name": "chkp-roniz"
+  },
+  "homepage": "https://github.com/chkp-roniz/harness/tree/main/plugins/seamless-compaction",
+  "repository": "https://github.com/chkp-roniz/harness",
+  "license": "MIT",
+  "keywords": [
+    "compaction",
+    "context",
+    "tool-results",
+    "hooks"
+  ],
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "startAt": {
+      "type": "number",
+      "title": "Start at context %",
+      "description": "Clean only once the main context is at least this full, measured against the window the engine compacts at (smaller than the model's when CLAUDE_CODE_AUTO_COMPACT_WINDOW is set). Applies to the engine's own compaction in the main session. A subagent's compaction is not gated. 0 cleans on every engine compaction.",
+      "default": 70
+    },
+    "keepTurns": {
+      "type": "number",
+      "title": "Protected prompts",
+      "description": "The last N user prompts, and everything after them, are never touched.",
+      "default": 3
+    },
+    "minAutoPct": {
+      "type": "number",
+      "title": "Engine compaction: minimum cleanup %",
+      "description": "When the engine itself starts a compaction (window full), use the cleanup if it frees at least this much. Otherwise the engine summarizes the cleaned messages.",
+      "default": 30
+    }
+  }
+}
