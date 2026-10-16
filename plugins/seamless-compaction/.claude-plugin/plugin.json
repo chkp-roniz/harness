@@ -1,6 +1,6 @@
 {
   "name": "seamless-compaction",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "description": "Cleans old tool results out of the context when the engine compacts, with no model call and no wait. Logs every operation.",
   "author": {
     "name": "chkp-roniz"
@@ -33,6 +33,30 @@
       "title": "Engine compaction: minimum cleanup %",
       "description": "When the engine itself starts a compaction (window full), use the cleanup if it frees at least this much. Otherwise the engine summarizes the cleaned messages.",
       "default": 30
+    },
+    "trimChars": {
+      "type": "number",
+      "title": "Trim results over (chars)",
+      "description": "Tool results longer than this keep their first 40 and last 20 lines. Lower it (3000 works well) when long sessions are mostly subagent reports and briefs.",
+      "default": 4000
+    },
+    "subagentReports": {
+      "type": "boolean",
+      "title": "Shorten old subagent reports",
+      "description": "Outside the protected prompts, a finished subagent's report keeps its frame and first lines; the rest is cut. Only the engine's exact report frame is matched, so a prompt that quotes a report stays a prompt. Reports never count as prompts, whatever this is set to.",
+      "default": true
+    },
+    "reportKeepLines": {
+      "type": "number",
+      "title": "Report lines kept",
+      "description": "How many non-empty lines of an old subagent report are kept. Reports put the verdict first.",
+      "default": 12
+    },
+    "writeContent": {
+      "type": "boolean",
+      "title": "Drop old Write content",
+      "description": "Outside the protected prompts, an old Write call keeps its file path; content over 1500 chars becomes a pointer to the file, which is on disk.",
+      "default": true
     }
   }
 }

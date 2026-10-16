@@ -69,7 +69,13 @@ export async function fillPct($: EngineInterface): Promise<number | undefined> {
 export const register: Register = (on, options) => {
   const startAt = num(options.startAt, DEFAULT_START_AT)
   const minAutoPct = num(options.minAutoPct, 30)
-  const clean: Partial<CleanupOptions> = { keepTurns: Math.max(1, num(options.keepTurns, 3)) }
+  const clean: Partial<CleanupOptions> = {
+    keepTurns: Math.max(1, num(options.keepTurns, 3)),
+    longChars: Math.max(500, num(options.trimChars, 4000)),
+    reports: options.subagentReports !== false,
+    reportKeepLines: Math.max(1, num(options.reportKeepLines, 12)),
+    writes: options.writeContent !== false,
+  }
 
   // ------------------------------------------------------------ start
 
