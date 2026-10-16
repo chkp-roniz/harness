@@ -52,15 +52,25 @@ The mod hooks the engine's `session.compact` event. It acts only on the engine's
    | read | An older `Read` of a path that is read, edited or written again later becomes a one-line stub. |
    | dup | An older identical tool call + result becomes a stub. The newest stays. |
    | noise | Bash only: ANSI codes, `\r` progress lines and repeated lines (`line (xN)`). |
-   | trim | Results over 4000 chars keep the first 40 and last 20 lines. Errors keep the first 2000 chars. |
+   | trim | Results over `trimChars` (4000) chars keep the first 40 and last 20 lines. Errors keep the first 2000 chars. |
+   | report | An old subagent report (the engine's hand-back message) keeps its frame and first `reportKeepLines` (12) lines. Reports under 1500 chars stay whole. |
+   | write | An old `Write` call keeps its tool and path; content of 1500 chars or more becomes a pointer to the file, which is on disk. |
 
    Every stub and cut says what was removed and how to get it back (re-read or re-run the tool).
 3. **Decide.** If the cleanup frees at least `minAutoPct` (30%) of the transcript, the cleaned messages replace the summary: no model call. If it frees less, the engine summarizes the cleaned messages as usual.
 4. **Record.** One log line, a toast in the main session, and the last 5 operations kept for `/seamless-compaction`.
 
-Never touched: the last `keepTurns` (3) user prompts and everything after them, all message text, tool inputs, results under 300 chars (no stubs), and `Agent` / `Task` / `TodoWrite` results. The message count and every tool call/result pair stay the same. If anything fails, the compaction is left to the engine.
+Never touched: the last `keepTurns` (3) user prompts and everything after them, all other message text, all other tool inputs, results under 300 chars (no stubs), and `Agent` / `Task` / `TodoWrite` results. The message count and every tool call/result pair stay the same. If anything fails, the compaction is left to the engine.
 
 There is no cleanup between turns. The engine refuses a plugin's compaction while a turn runs. When it does run one, it skips the plugin's own `session.compact` hook. So the cleanup runs only when the engine compacts. (The experimental `proactive` option was removed in 0.1.3.)
+
+### Subagent reports
+
+When a session delegates to subagents, each finished agent's report reaches the session as a user-role text message, not a tool result. In an orchestrating session (one agent writing briefs, others writing the code) these reports and the session's own `Write` calls are most of the history, and the tool rules alone free little. The `report` and `write` rules cover them.
+
+A report is matched on the engine's whole frame, not on a keyword: the first line is `Another Claude session sent a message:`, the next is `<agent-message from="…">`, the third starts with `[Subagent hand-back]`, every report line is indented by two spaces, and `</agent-message>` closes it. A prompt that quotes the marker, or pastes a report after its own words, is still a prompt. So is the engine's own compaction summary, which can quote a report.
+
+Reports never count as prompts for `keepTurns`, whether `subagentReports` is on or off. Otherwise a burst of reports would push the person's real prompts out of the protected window.
 
 ## Commands
 
@@ -73,6 +83,10 @@ There is no cleanup between turns. The engine refuses a plugin's compaction whil
 | `startAt` | 70 | Main-session context % before it cleans. 0 = every engine compaction. |
 | `keepTurns` | 3 | The last N user prompts, and everything after them, are never touched. |
 | `minAutoPct` | 30 | Minimum % freed to skip the engine's summary. |
+| `trimChars` | 4000 | Results longer than this are trimmed. 3000 suits orchestrating sessions. |
+| `subagentReports` | true | Shorten old subagent reports (rule `report`). |
+| `reportKeepLines` | 12 | Non-empty report lines kept. Reports put the verdict first. |
+| `writeContent` | true | Replace old `Write` content with a pointer (rule `write`). |
 
 Set them in the plugin config menu, or in settings:
 

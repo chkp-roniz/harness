@@ -2,13 +2,19 @@ import type { SessionMessage } from 'claude-code'
 
 /** Light cleanup of old tool results. Pure: no engine calls, so it can be tested alone. */
 
-export type Rule = 'read' | 'dup' | 'trim' | 'noise'
+export type Rule = 'read' | 'dup' | 'trim' | 'noise' | 'report' | 'write'
 
 export type CleanupOptions = {
   /** The last N user prompts, and everything after the first of them, are never changed. */
   keepTurns: number
   /** Results longer than this many characters are trimmed (rule "trim"). */
   longChars: number
+  /** Old subagent reports shrink to their first lines (rule "report"). */
+  reports: boolean
+  /** Lines of an old subagent report that are kept: the verdict and top findings come first. */
+  reportKeepLines: number
+  /** Old Write calls keep their path; their content becomes a pointer to the file (rule "write"). */
+  writes: boolean
 }
 
 export type CleanupStats = {
@@ -22,7 +28,7 @@ export type CleanupStats = {
   changed: number
 }
 
-export const DEFAULTS: CleanupOptions = { keepTurns: 3, longChars: 4000 }
+export const DEFAULTS: CleanupOptions = { keepTurns: 3, longChars: 4000, reports: true, reportKeepLines: 12, writes: true }
 
 const PROTECTED_TOOLS = new Set(['Agent', 'Task', 'TodoWrite'])
 const MIN_STUB_CHARS = 300 // stubbing a smaller result saves nothing
@@ -31,10 +37,57 @@ const TAIL_LINES = 20
 const ERROR_KEEP = 2000
 const ANSI = /\u001b\[[0-9;?]*[ -/]*[@-~]/g
 
+const REPORT_MIN_CHARS = 1500 // a shorter report stays whole
+const WRITE_MIN_CHARS = 1500 // a shorter Write content stays inline
+
 type ToolResult = NonNullable<SessionMessage['toolResults']>[number]
 type Use = { tool: string; input: Record<string, unknown> }
 
-export const isPrompt = (m: SessionMessage) => m.role === 'user' && (m.toolResults?.length ?? 0) === 0 && m.text.trim() !== ''
+/**
+ * A finished subagent's report, as the engine delivers it to the session that started the agent: a user-role
+ * text message, not a tool result, so the tool rules never see it. The whole frame must match, not just the
+ * marker, so a prompt that quotes or pastes a report is still a prompt:
+ *
+ *   Another Claude session sent a message:
+ *   <agent-message from="<agent>">
+ *   [Subagent hand-back] <the engine's note>
+ *     <every report line indented by two spaces>
+ *   </agent-message>
+ *   <the engine's closing note>
+ */
+const FRAME_HEAD = 'Another Claude session sent a message:'
+const FRAME_FROM = /^<agent-message from="[^"\n]+">$/
+const HANDBACK = '[Subagent hand-back]'
+const FRAME_END = '</agent-message>'
+
+export function isSubagentReport(m: SessionMessage): boolean {
+  if (m.role !== 'user' || (m.toolResults?.length ?? 0) > 0) return false
+  const lines = m.text.split('\n')
+  if (lines[0] !== FRAME_HEAD || !FRAME_FROM.test(lines[1] ?? '') || !(lines[2] ?? '').startsWith(HANDBACK)) return false
+  const end = lines.indexOf(FRAME_END, 3)
+  return end > 3 && lines.slice(3, end).every(l => l === '' || l.startsWith('  '))
+}
+
+/** A prompt the person typed. Subagent reports are not, so a burst of them cannot push real prompts out of the protected turns. */
+export const isPrompt = (m: SessionMessage) => m.role === 'user' && (m.toolResults?.length ?? 0) === 0 && m.text.trim() !== '' && !isSubagentReport(m)
+
+/** An old report cut to the frame and its first lines; the engine's closing note stays. Undefined when too little would go. */
+export function shortenReport(text: string, keepLines: number): string | undefined {
+  if (text.length < REPORT_MIN_CHARS) return undefined
+  const lines = text.split('\n')
+  const end = lines.indexOf(FRAME_END, 3)
+  const kept: string[] = []
+  let i = 3
+  for (; i < end && kept.length < keepLines; i++) if ((lines[i] ?? '').trim() !== '') kept.push(lines[i]!)
+  const cut = lines.slice(i, end).join('\n')
+  if (cut.trim().length < 200) return undefined
+  return [...lines.slice(0, 3), ...kept,
+    `  [... ${cut.length} chars of this subagent report trimmed by seamless-compaction; the full text is in the session transcript]`,
+    ...lines.slice(end)].join('\n')
+}
+
+const bigWrite = (u: NonNullable<SessionMessage['toolUses']>[number]) =>
+  u.tool === 'Write' && typeof u.input?.content === 'string' && u.input.content.length >= WRITE_MIN_CHARS
 
 export function sizeOf(m: SessionMessage): number {
   let n = m.text.length
@@ -116,7 +169,7 @@ export function cleanup(messages: readonly SessionMessage[], options: Partial<Cl
     }
   })
 
-  const rules: Record<Rule, number> = { read: 0, dup: 0, trim: 0, noise: 0 }
+  const rules: Record<Rule, number> = { read: 0, dup: 0, trim: 0, noise: 0, report: 0, write: 0 }
   let changed = 0
   let charsBefore = 0
   let charsAfter = 0
@@ -124,6 +177,27 @@ export function cleanup(messages: readonly SessionMessage[], options: Partial<Cl
   const out = messages.map((m, i) => {
     const before = sizeOf(m)
     charsBefore += before
+    if (i < limit && o.reports && isSubagentReport(m)) {
+      const short = shortenReport(m.text, Math.max(1, o.reportKeepLines))
+      if (short !== undefined) {
+        rules.report++
+        changed++
+        const rebuilt: SessionMessage = { role: m.role, text: short, toolUses: m.toolUses }
+        charsAfter += sizeOf(rebuilt)
+        return rebuilt
+      }
+    }
+    // An old Write's content is on disk already. The call stays, with its path; only the content becomes a pointer.
+    if (i < limit && o.writes && (m.toolUses ?? []).some(bigWrite)) {
+      const toolUses = m.toolUses.map(u => bigWrite(u)
+        ? { ...u, input: { ...u.input, content: `[seamless-compaction: ${(u.input.content as string).length} chars written to ${pathOf(u.input) ?? 'the file'}; read the file for its current text]` } }
+        : u)
+      rules.write++
+      changed++
+      const rebuilt: SessionMessage = { role: m.role, text: m.text, toolUses, toolResults: m.toolResults }
+      charsAfter += sizeOf(rebuilt)
+      return rebuilt
+    }
     if (i >= limit || (m.toolResults?.length ?? 0) === 0) {
       charsAfter += before
       return m
