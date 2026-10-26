@@ -17,6 +17,12 @@
       "source": "./plugins/seamless-compaction",
       "description": "Cleans old tool results out of the context when the engine compacts, with no model call",
       "version": "0.1.3"
+    },
+    {
+      "name": "ultramodel",
+      "source": "./plugins/ultramodel",
+      "description": "Mention opus, sonnet or haiku in a prompt to run that one turn on that model, with per-turn cost logs",
+      "version": "0.1.0"
     }
   ]
 }

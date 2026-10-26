@@ -16,6 +16,7 @@ Each plugin lives under `plugins/<name>/`. There are two kinds:
 | --- | --- | --- | --- |
 | [`ms-office-expert`](./plugins/ms-office-expert/README.md) | skill | yes | yes |
 | [`seamless-compaction`](./plugins/seamless-compaction/README.md) | mod | yes | no |
+| [`ultramodel`](./plugins/ultramodel/README.md) | mod | yes | no |
 
 ### `ms-office-expert`
 
@@ -31,6 +32,10 @@ See [`plugins/ms-office-expert/README.md`](./plugins/ms-office-expert/README.md)
 
 Cleans old tool results out of the context when the engine compacts, with no model call. If that frees enough room, the engine's summary is skipped. See [`plugins/seamless-compaction/README.md`](./plugins/seamless-compaction/README.md) for how it works and its options.
 
+### `ultramodel`
+
+Mention `opus`, `sonnet` or `haiku` in a prompt to run that one turn on that model, with keyword coloring and per-turn cost logs. See [`plugins/ultramodel/README.md`](./plugins/ultramodel/README.md) for how it works.
+
 ## Install
 
 ### Claude Code (all plugins)
@@ -41,11 +46,12 @@ Add the marketplace once, then install any plugin from it:
 /plugin marketplace add chkp-roniz/harness
 /plugin install ms-office-expert@chkp-roniz-plugins
 /plugin install seamless-compaction@chkp-roniz-plugins
+/plugin install ultramodel@chkp-roniz-plugins
 ```
 
 ### microsoft/apm (skill plugins only)
 
-This repo hosts APM packages as subdirectories under `plugins/`. APM supports installing a package from a subdirectory using its GitHub shorthand: `<owner>/<repo>/<subpath>`. Do not use APM for mods such as `seamless-compaction`: APM copies their `hooks.json` into `.claude/settings.json` as a shell hook, which does not load the mod.
+This repo hosts APM packages as subdirectories under `plugins/`. APM supports installing a package from a subdirectory using its GitHub shorthand: `<owner>/<repo>/<subpath>`. Do not use APM for mods such as `seamless-compaction` or `ultramodel`: APM copies their `hooks.json` into `.claude/settings.json` as a shell hook, which does not load the mod.
 
 **Imperative install (one-shot):**
 
@@ -104,14 +110,24 @@ See the [APM CLI reference](https://github.com/microsoft/apm/blob/main/docs/src/
 │   │               ├── SKILL.md
 │   │               ├── README.md
 │   │               └── *.py
-│   └── seamless-compaction/          # mod = Claude plugin only
+│   ├── seamless-compaction/          # mod = Claude plugin only
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json           # Claude plugin manifest (options, types)
+│   │   ├── hooks/
+│   │   │   ├── hooks.json            # lists the hook modules
+│   │   │   └── *.ts
+│   │   ├── tests/
+│   │   ├── fixtures/
+│   │   ├── types/
+│   │   └── README.md
+│   └── ultramodel/                   # mod = Claude plugin only
 │       ├── .claude-plugin/
-│       │   └── plugin.json           # Claude plugin manifest (options, types)
+│       │   └── plugin.json
 │       ├── hooks/
-│       │   ├── hooks.json            # lists the hook modules
+│       │   ├── hooks.json
+│       │   ├── register.tsx
 │       │   └── *.ts
 │       ├── tests/
-│       ├── fixtures/
 │       ├── types/
 │       └── README.md
 ├── .gitignore
